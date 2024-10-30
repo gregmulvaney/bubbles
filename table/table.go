@@ -37,7 +37,10 @@ type dimensions struct {
 type Option func(*Model)
 
 func New(opts ...Option) (m Model) {
-
+	m.dimensions = dimensions{
+		width:  10,
+		height: 10,
+	}
 	return m
 }
 
