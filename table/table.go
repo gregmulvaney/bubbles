@@ -6,10 +6,10 @@ import (
 )
 
 type Model struct {
-	cols []Column
-	rows []Row
-	dimensions
-	styles Styles
+	cols       []Column
+	rows       []Row
+	dimensions dimensions
+	styles     Styles
 }
 
 type Row struct {
@@ -37,10 +37,11 @@ type dimensions struct {
 type Option func(*Model)
 
 func New(opts ...Option) (m Model) {
-	m.dimensions = dimensions{
-		width:  10,
-		height: 10,
+
+	for _, opt := range opts {
+		opt(&m)
 	}
+
 	return m
 }
 
