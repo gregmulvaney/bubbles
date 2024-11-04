@@ -23,6 +23,9 @@ func New() (m Model) {
 		{"2", "2", "Los Angeles", "USA"},
 		{"3", "3", "London", "Great Britain"},
 		{"4", "4", "Warsaw", "Poland"},
+		{"5", "5", "New York", "USA"},
+		{"6", "6", "Paris", "France"},
+		{"7", "7", "Mexico City", "Mexico"},
 	}
 
 	m.table = table.New(
