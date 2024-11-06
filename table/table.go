@@ -73,6 +73,10 @@ func (m *Model) SetStyles(s Styles) {
 	m.styles = s
 }
 
+func (m *Model) SetRows(r []Row) {
+	m.rows = r
+}
+
 type Option func(*Model)
 
 func New(opts ...Option) (m Model) {
