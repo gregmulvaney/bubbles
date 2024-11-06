@@ -30,6 +30,14 @@ func DefaultStyles() Styles {
 	}
 }
 
+func (m *Model) SetValues(items []Item) {
+	m.items = items
+}
+
+func (m *Model) SetStyles(s Styles) {
+	m.styles = s
+}
+
 type Option func(*Model)
 
 func New(opts ...Option) (m Model) {
@@ -63,10 +71,6 @@ func WithKeyWidth(k bool) Option {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil
-}
-
-func (m *Model) SetStyles(s Styles) {
-	m.styles = s
 }
 
 func (m Model) View() string {
