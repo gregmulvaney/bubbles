@@ -1,3 +1,12 @@
+# macOS Junk
 .DS_Store
+
+# Editor junk
 .idea 
-.VSCode
+.vscode
+
+# DIRENV files
+.envrc
+
+# Demos folder
+demos
