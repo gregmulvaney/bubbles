@@ -23,7 +23,7 @@ type Styles struct {
 }
 
 func DefaultStyles() Styles {
-	baseStyle := lipgloss.NewStyle().Padding(0, 1).Background(lipgloss.Color("4")).Foreground(lipgloss.Color("0")).Bold(true).Margin(0, 1)
+	baseStyle := lipgloss.NewStyle().Padding(0, 1).Background(lipgloss.Color("4")).Foreground(lipgloss.Color("0")).Bold(true).MarginRight(1)
 	return Styles{
 		Crumb:  baseStyle,
 		Active: baseStyle.Background(lipgloss.Color("214")),
