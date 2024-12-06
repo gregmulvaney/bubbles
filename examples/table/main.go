@@ -6,8 +6,7 @@ import (
 )
 
 type Model struct {
-	width, height int
-	table         table.Model
+	table table.Model
 }
 
 func New() (m Model) {
@@ -31,7 +30,6 @@ func New() (m Model) {
 	m.table = table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
-		table.WithFocus(true),
 	)
 
 	return m
@@ -52,12 +50,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.table.SetHeight(msg.Height)
+		m.table.SetWidth(msg.Width)
 	}
-
-	m.table.UpdateDimensions(m.width, m.height)
-
 	m.table, cmd = m.table.Update(msg)
 	cmds = append(cmds, cmd)
 
