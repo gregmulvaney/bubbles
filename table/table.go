@@ -9,35 +9,36 @@ import (
 )
 
 type Model struct {
-	Keymap Keymap
-
-	cols   []Column
-	rows   []Row
-	cursor int
-	focus  bool
+	keymap Keymap
 	styles Styles
 
+	// data
+	cols []Column
+	rows []Row
+
+	// state
+	focused bool
+	width   int
+	height  int
+
+	// table
+	cursor        int
 	flexCellWidth int
-	dimensions    dimensions
+	start         int
+	end           int
 
 	viewport viewport.Model
-	start    int
-	end      int
 }
 
 type Column struct {
-	Title  string
-	Width  int
-	Flex   bool
-	Hidden bool
+	Title    string
+	Width    int
+	MinWidth int
+	Flex     bool
+	Hidden   bool
 }
 
 type Row []string
-
-type dimensions struct {
-	width  int
-	height int
-}
 
 type Keymap struct {
 	LineUp   key.Binding
@@ -69,29 +70,41 @@ func DefaultStyles() Styles {
 	}
 }
 
+// Update styles
 func (m *Model) SetStyles(s Styles) {
 	m.styles = s
 }
 
+// Update rows
 func (m *Model) SetRows(r []Row) {
 	m.rows = r
+}
+
+// Update width
+func (m *Model) SetWidth(w int) {
+	m.width = w
+	m.viewport.Width = w
+}
+
+// Update height
+func (m *Model) SetHeight(h int) {
+	m.height = h
+	m.viewport.Height = h - 4
 }
 
 type Option func(*Model)
 
 func New(opts ...Option) (m Model) {
-	m.Keymap = DefaultKeymap()
+	// Set defaults
+	m.keymap = DefaultKeymap()
 	m.styles = DefaultStyles()
 	m.cursor = 0
-
-	m.dimensions = dimensions{
-		width:  0,
-		height: 0,
-	}
 	m.flexCellWidth = 0
+	m.height = 0
+	m.width = 0
+	m.viewport = viewport.New(0, 0)
 
-	m.viewport = viewport.New(10, 20)
-
+	// Run all options
 	for _, opt := range opts {
 		opt(&m)
 	}
@@ -115,7 +128,7 @@ func WithRows(rows []Row) Option {
 
 func WithFocus(f bool) Option {
 	return func(m *Model) {
-		m.focus = f
+		m.focused = f
 	}
 }
 
@@ -127,48 +140,46 @@ func WithStyles(s Styles) Option {
 
 func WithKeymap(k Keymap) Option {
 	return func(m *Model) {
-		m.Keymap = k
+		m.keymap = k
 	}
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	// var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.Keymap.LineDown):
+		case key.Matches(msg, m.keymap.LineDown):
 			m.MoveDown(1)
-		case key.Matches(msg, m.Keymap.LineUp):
+		case key.Matches(msg, m.keymap.LineUp):
 			m.MoveUp(1)
 		}
+	case tea.WindowSizeMsg:
+		m.viewport.Height = msg.Height - 4
+		m.viewport.Width = msg.Width
+		m.UpdateViewport()
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m *Model) Focused() bool {
-	return m.focus
+	return m.focused
 }
 
 func (m *Model) Focus() {
-	m.focus = true
-	m.UpdateViewport()
+	m.focused = true
 }
 
 func (m *Model) Blur() {
-	m.focus = false
-	m.UpdateViewport()
+	m.focused = false
 }
 
 func (m Model) View() string {
 	header := m.renderHeader()
 	return lipgloss.JoinVertical(lipgloss.Top, header, m.viewport.View())
-}
-
-func (m *Model) UpdateDimensions(width int, height int) {
-	m.dimensions.width = width
-	m.dimensions.height = height
-	m.UpdateViewport()
 }
 
 func (m *Model) UpdateViewport() {
@@ -181,8 +192,8 @@ func (m *Model) UpdateViewport() {
 	}
 	m.end = clamp(m.cursor+m.viewport.Height, 0, len(m.rows))
 
-	m.viewport.Width = m.dimensions.width
-	m.viewport.Height = min(len(m.rows), m.dimensions.height)
+	m.viewport.Width = m.width
+	m.viewport.Height = min(len(m.rows), m.height)
 
 	for i := range m.rows {
 		renderedRows = append(renderedRows, m.renderRow(i))
@@ -229,43 +240,41 @@ func (m *Model) MoveDown(n int) {
 
 func (m *Model) renderHeaderColumns() []string {
 	renderedColumns := make([]string, len(m.cols))
-	// Width consumed by staticly sized elements
-	populatedWidth := 0
-	flexColCount := 0
+	consumedWidth := 0
+	flexColumnCount := 0
 
-	// Render all staticly sized columns first
 	for i, col := range m.cols {
 		if col.Hidden {
 			continue
-		}
-		if col.Flex {
-			flexColCount += 1
+		} else if col.Flex {
+			flexColumnCount += 1
 			continue
-		}
-		if col.Width != 0 {
+		} else if col.Width > 0 {
+			consumedWidth += col.Width
 			renderedColumns[i] = m.styles.Header.Width(col.Width).MaxWidth(col.Width).Render(col.Title)
 		}
 	}
 
-	availableWidth := m.dimensions.width - populatedWidth
+	availableWidth := m.width - consumedWidth
 
-	if flexColCount > 0 {
-		flexCellWidth := availableWidth / flexColCount
+	if flexColumnCount > 0 {
+		flexCellWidth := availableWidth / flexColumnCount
 		m.flexCellWidth = flexCellWidth
 		for i, col := range m.cols {
-			if !col.Flex {
+			if !col.Flex || col.Hidden || col.Width > 0 {
 				continue
 			}
 			renderedColumns[i] = m.styles.Header.Width(flexCellWidth).MaxWidth(flexCellWidth).Render(col.Title)
 		}
 	}
+
 	return renderedColumns
 }
 
 func (m *Model) renderHeader() string {
 	columns := m.renderHeaderColumns()
 	header := lipgloss.JoinHorizontal(lipgloss.Left, columns...)
-	return lipgloss.NewStyle().Width(m.dimensions.width).MaxWidth(m.dimensions.width).Render(header)
+	return lipgloss.NewStyle().Width(m.width).MaxWidth(m.width).Render(header)
 }
 
 func (m *Model) renderRow(r int) string {
@@ -290,10 +299,10 @@ func (m *Model) renderRow(r int) string {
 	row := lipgloss.JoinHorizontal(lipgloss.Left, cells...)
 
 	if r == m.cursor {
-		return m.styles.Selected.Width(m.dimensions.width).MaxWidth(m.dimensions.width).Render(row)
+		return m.styles.Selected.Width(m.width).MaxWidth(m.width).Render(row)
 	}
 
-	return lipgloss.NewStyle().Width(m.dimensions.width).MaxWidth(m.dimensions.width).Render(row)
+	return lipgloss.NewStyle().Width(m.width).MaxWidth(m.width).Render(row)
 }
 
 func max(a, b int) int {
