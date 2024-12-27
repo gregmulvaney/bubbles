@@ -77,6 +77,10 @@ func WithSeparator(s string) Option {
 	}
 }
 
+func (m *Model) SetItems(items [][]string) {
+	m.data = items
+}
+
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil
 }
