@@ -36,6 +36,8 @@ type Column struct {
 	MinWidth int
 	Flex     bool
 	Hidden   bool
+	Auto     bool
+	Padding  int
 }
 
 type Row []string
@@ -242,6 +244,7 @@ func (m *Model) renderHeaderColumns() []string {
 	renderedColumns := make([]string, len(m.cols))
 	consumedWidth := 0
 	flexColumnCount := 0
+	// autoCellWidth := 0
 
 	for i, col := range m.cols {
 		if col.Hidden {
@@ -292,7 +295,7 @@ func (m *Model) renderRow(r int) string {
 		if m.cols[i].Flex {
 			width = m.flexCellWidth
 		}
-		renderedCell := m.styles.Cell.Width(width).MaxWidth(width).Render(runewidth.Truncate(value, width, "..."))
+		renderedCell := m.styles.Cell.Width(width).MaxWidth(width).Render(runewidth.Truncate(value, width-3, "..."))
 		cells = append(cells, renderedCell)
 	}
 
