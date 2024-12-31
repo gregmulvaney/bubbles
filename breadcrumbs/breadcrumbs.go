@@ -25,7 +25,7 @@ type Styles struct {
 
 func DefaultStyles() Styles {
 	return Styles{
-		Crumb: lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")),
+		Crumb: lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")),
 	}
 }
 
