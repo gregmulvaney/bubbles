@@ -20,12 +20,14 @@ type Crumb struct {
 }
 
 type Styles struct {
-	Crumb lipgloss.Style
+	Crumb  lipgloss.Style
+	Active lipgloss.Style
 }
 
 func DefaultStyles() Styles {
 	return Styles{
-		Crumb: lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")),
+		Crumb:  lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
+		Active: lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
 	}
 }
 
@@ -67,8 +69,12 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 func (m Model) View() string {
 	var crumbs []string
-	for _, crumb := range m.crumbs {
-		crumbs = append(crumbs, m.styles.Crumb.Render(crumb.Value))
+	for i, crumb := range m.crumbs {
+		if i == len(m.crumbs)-1 {
+			crumbs = append(crumbs, m.styles.Active.Render(crumb.Value))
+		} else {
+			crumbs = append(crumbs, m.styles.Crumb.Render(crumb.Value))
+		}
 	}
 	return lipgloss.JoinHorizontal(lipgloss.Left, crumbs...)
 }
