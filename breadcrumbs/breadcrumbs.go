@@ -34,6 +34,8 @@ func New(options ...Option) (m Model) {
 		opt(&m)
 	}
 
+	m.styles = DefaultStyles()
+
 	return m
 }
 
