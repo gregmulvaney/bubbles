@@ -8,15 +8,7 @@ import (
 type Model struct {
 	styles Styles
 
-	height int
-	width  int
-
-	crumbs []Crumb
-}
-
-type Crumb struct {
-	Value  string
-	Active bool
+	crumbs []string
 }
 
 type Styles struct {
@@ -26,30 +18,18 @@ type Styles struct {
 
 func DefaultStyles() Styles {
 	return Styles{
-		Crumb:  lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
-		Active: lipgloss.NewStyle().Padding(0, 1).Margin(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
+		Crumb:  lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
+		Active: lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
 	}
 }
 
-func (m *Model) SetCrumbs(crumbs []Crumb) {
+func (m *Model) SetCrumbs(crumbs []string) {
 	m.crumbs = crumbs
-}
-
-func (m *Model) SetHeight(h int) {
-	m.height = h
-}
-
-func (m *Model) SetWidth(w int) {
-	m.width = w
 }
 
 type Option func(*Model)
 
 func New(options ...Option) (m Model) {
-	m.styles = DefaultStyles()
-	m.height = 0
-	m.width = 0
-
 	for _, opt := range options {
 		opt(&m)
 	}
@@ -57,7 +37,7 @@ func New(options ...Option) (m Model) {
 	return m
 }
 
-func WithCrumbs(crumbs []Crumb) Option {
+func WithCrumbs(crumbs []string) Option {
 	return func(m *Model) {
 		m.crumbs = crumbs
 	}
@@ -71,10 +51,11 @@ func (m Model) View() string {
 	var crumbs []string
 	for i, crumb := range m.crumbs {
 		if i == len(m.crumbs)-1 {
-			crumbs = append(crumbs, m.styles.Active.Render(crumb.Value))
-		} else {
-			crumbs = append(crumbs, m.styles.Crumb.Render(crumb.Value))
+			crumbs = append(crumbs, m.styles.Active.Render(crumb))
+			continue
 		}
+		crumbs = append(crumbs, m.styles.Crumb.Render(crumb))
 	}
+
 	return lipgloss.JoinHorizontal(lipgloss.Left, crumbs...)
 }
