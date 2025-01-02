@@ -18,8 +18,8 @@ type Styles struct {
 
 func DefaultStyles() Styles {
 	return Styles{
-		Crumb:  lipgloss.NewStyle().Padding(0, 1).Margin(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
-		Active: lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
+		Crumb:  lipgloss.NewStyle().Padding(0, 1).MarginLeft(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
+		Active: lipgloss.NewStyle().Padding(0, 1).MarginLeft(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
 	}
 }
 
