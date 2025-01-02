@@ -18,7 +18,7 @@ type Styles struct {
 
 func DefaultStyles() Styles {
 	return Styles{
-		Crumb:  lipgloss.NewStyle().Padding(0, 1).MarginRight(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
+		Crumb:  lipgloss.NewStyle().Padding(0, 1).Margin(1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("4")).Bold(true),
 		Active: lipgloss.NewStyle().Padding(0, 1).Foreground(lipgloss.Color("0")).Background(lipgloss.Color("214")).Bold(true),
 	}
 }
@@ -56,7 +56,9 @@ func (m Model) View() string {
 			crumbs = append(crumbs, m.styles.Active.Render(crumb))
 			continue
 		}
-		crumbs = append(crumbs, m.styles.Crumb.Render(crumb))
+		// TODO: this should probably be a fprint
+		renderedCrumb := lipgloss.JoinHorizontal(lipgloss.Left, "<", crumb, ">")
+		crumbs = append(crumbs, m.styles.Crumb.Render(renderedCrumb))
 	}
 
 	return lipgloss.JoinHorizontal(lipgloss.Left, crumbs...)
