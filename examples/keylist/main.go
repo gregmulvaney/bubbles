@@ -29,6 +29,7 @@ func New() (m Model) {
 		keylist.WithItems(keyData),
 		keylist.WithGrid(true),
 		keylist.WithSeparator(":"),
+		keylist.WithMaxRows(3),
 	)
 
 	return m

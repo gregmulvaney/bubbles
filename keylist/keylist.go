@@ -25,7 +25,7 @@ type Styles struct {
 // TODO: Should this be shared
 func DefaultStyles() Styles {
 	return Styles{
-		Key:   lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Bold(true).PaddingRight(0),
+		Key:   lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Bold(true),
 		Value: lipgloss.NewStyle(),
 	}
 }
@@ -86,31 +86,57 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	var items []string
-	keyWidth := 0
-	var keylist string
-	separatorWidth := runewidth.StringWidth(m.separator) + 1
+	var keySets [][]string
+	if m.maxRows > 0 {
+		for i := 0; i < len(m.data); i += m.maxRows {
+			end := i + m.maxRows
+			if end > len(m.data) {
+				end = len(m.data)
+			}
+			set := m.renderKeySet(m.data[i:end])
+			keySets = append(keySets, set)
+		}
+	} else {
+		keySets = append(keySets, m.renderKeySet(m.data))
+	}
+	var renderedKeyList []string
+	for _, set := range keySets {
+		list := lipgloss.NewStyle().PaddingRight(1).Render(lipgloss.JoinVertical(lipgloss.Top, set...))
+		renderedKeyList = append(renderedKeyList, list)
+	}
 
-	for _, item := range m.data {
-		kw := runewidth.StringWidth(item[0])
+	return lipgloss.JoinHorizontal(lipgloss.Left, renderedKeyList...)
+}
+
+func (m *Model) renderKeySet(items [][]string) []string {
+	var keySet []string
+	sepWidth := 0
+	if m.separator != "" {
+		sepWidth = runewidth.StringWidth(m.separator)
+	}
+	keyWidth := 0
+	for _, item := range items {
+		kw := runewidth.StringWidth(item[0]) + sepWidth + 1
 		if kw > keyWidth-1 {
-			keyWidth = kw + 1 + separatorWidth
+			keyWidth = kw
 		}
 	}
 
-	if m.maxRows > 0 {
-	} else {
-		for _, item := range m.data {
-			if !m.grid {
-				keyWidth = runewidth.StringWidth(item[0]) + 1 + separatorWidth
-			}
+	for _, item := range items {
+		if !m.grid {
+			keyWidth = runewidth.StringWidth(item[0]) + sepWidth + 1
+		}
 
+		if m.separator != "" {
 			key := m.styles.Key.Width(keyWidth).Render(fmt.Sprintf("%s%s", item[0], m.separator))
 			value := m.styles.Value.Render(item[1])
-			items = append(items, lipgloss.JoinHorizontal(lipgloss.Left, key, value))
+			keySet = append(keySet, lipgloss.JoinHorizontal(lipgloss.Left, key, value))
+		} else {
+			key := m.styles.Key.Width(keyWidth).Render(item[0])
+			value := m.styles.Value.Render(item[1])
+			keySet = append(keySet, lipgloss.JoinHorizontal(lipgloss.Left, key, value))
 		}
-		keylist = lipgloss.JoinVertical(lipgloss.Top, items...)
 	}
 
-	return keylist
+	return keySet
 }
